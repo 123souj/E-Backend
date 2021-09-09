@@ -120,11 +120,8 @@ app.get("/EmployeeForm", (req, res) => {
   })
 
 
-app.post("/Attendence",verifyToken, (req, res) => {
-  jwt.verify(req.token,'secretkey',(err,authData)=>{
-    if(err){
-      res.sendStatus(403);
-    }else{
+app.post("/Attendence", (req, res) => {
+  
       var myData = new attendence(req.body);
       myData.save()
      .then(item => {
@@ -133,17 +130,13 @@ app.post("/Attendence",verifyToken, (req, res) => {
      .catch(err => {
      res.status(400).send("Unable to save to database");
      });
-    }
+  
   });
  
-});
 
 
- app.post("/EmployeeForm",verifyToken, (req, res) => {
-  jwt.verify(req.token,'secretkey',(err,authData)=>{
-    if(err){
-      res.sendStatus(403);
-    }else{
+ app.post("/EmployeeForm", (req, res) => {
+  
       var myData = new employee(req.body);
  myData.save()
 .then(item => {
@@ -153,41 +146,22 @@ res.send("Employee information updated to database");
 res.status(400).send("Unable to save to database");
 
 });
-}
-});
 
 });
 
  
 
 
-app.get('/salary',verifyToken, function(req, res){
-  jwt.verify(req.token,'secretkey',(err,authData)=>{
-    if(err){
-      res.sendStatus(403);
-    }
-    else{
+app.get('/salary', function(req, res){
+  
 
   employee.find(function(err, response){
      res.json(response);
-  });
-}
+  
 });
 });
  
-function verifyToken(req,res,next){
-  const bearerHeader=req.headers['authorization'];
-  if(typeof bearerHeader!=='undefined'){
 
-    const bearer=bearerHeader.split(' ');
-    const bearerToken=bearer[1];
-    req.token=bearerToken;
-    next();
-
-  }else{
-    res.sendStatus(403);
-  }
-}
  
 app.listen(port, () => {
 
