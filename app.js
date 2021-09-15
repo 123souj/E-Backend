@@ -1,19 +1,35 @@
+
 var express = require("express");
+
+ 
 var app = express();
+require("dotenv").config();
+const port = process.env.PORT || 3001;
 
- require("dotenv").config();
-var port = process.env.PORT || 3001;
+ 
 
+
+ 
 var bodyParser = require('body-parser');
+
+ 
 app.use(bodyParser.json());
+
+ 
 app.use(bodyParser.urlencoded({ extended: true }));
 
 const cors=require('cors');
 app.use(cors());
 
-const mongoose = require("mongoose");
-mongoose.Promise = global.Promise;
+ 
+ 
 
+ 
+var mongoose = require("mongoose");
+const { request } = require("express");
+
+ 
+mongoose.Promise = global.Promise;
 const uri =`mongodb+srv://soujanyasm:souj123@@ebay.mohco.mongodb.net/nodedemo?retryWrites=true&w=majority`;
 mongoose.connect(uri, {
   useNewUrlParser: true,
@@ -24,29 +40,41 @@ mongoose.connect(uri, {
 })
 .catch(err => console.log(err))
 
+
+ 
+// mongoose.connect("mongodb://localhost:27017/ebayproject");
+
 var credentials = [
   {
-      uid: 'muttu', password:'123456'
+    uid:'muttu',password:'123456'
+      
     }
   ]
 
-const jwt =require('jsonwebtoken');
+  const jwt =require('jsonwebtoken');
 const e = require("express");
 
- var nameSchema1 = new mongoose.Schema({
- eid: String,
+var nameSchema1 = new mongoose.Schema({
+
+ 
+  // uid: String,
+  eid: String,
  ename: String, 
  pname: String,
  location: String,
  date: Date,
  hrs: String
-});
+  
+  // password: password
+  
+   
+  });
 
   
 var nameSchema2 = new mongoose.Schema({
 
  
- 
+  // uid: String,
   eid: String,
   ename: String, 
   address: String,
@@ -57,19 +85,12 @@ var nameSchema2 = new mongoose.Schema({
 
 
   
-
+// password: password
   });
 
  
 
-   
 
-
- 
-  
- 
-
-  // var User = mongoose.model("User", nameSchema);
  var attendence = mongoose.model("attendence", nameSchema1);
 var employee =mongoose.model("employee", nameSchema2);
 
@@ -90,9 +111,15 @@ app.get("/EmployeeForm", (req, res) => {
 });
  
  app.post("/login", (req, res) => {
+
   let result = credentials.find(use => use.uid == req.body.uid);
     if(result) {
       if(result.password == req.body.password) {
+        // res.status(200).send (
+        //   {
+        //     message: "Successful login"
+        //   }
+        // )
         jwt.sign({credentials},'secretkey',(err,token)=>{
 
           res.json({
@@ -100,11 +127,7 @@ app.get("/EmployeeForm", (req, res) => {
           })
       
          });
-        // res.status(200).send (
-        //   {
-        //     message: "Successful login"
-        //   }
-        // )
+
         // var myData = new User(req.body);
         // myData.save()
       } else {
@@ -118,48 +141,87 @@ app.get("/EmployeeForm", (req, res) => {
         })
       }
   })
+//  var myData = new User(req.body);
+//  myData.save()
+// .then(item => {
+// res.send("Name saved to database");
+// })
+// .catch(err => {
+// res.status(400).send("Unable to save to database");
+// });
+// });
+
+app.post("/Attendence",verifyToken, (req, res) => {
+  jwt.verify(req.token,'secretkey',(err,authData)=>{
+    if(err){
+      res.sendStatus(403);
+    }else{
+  var myData = new attendence(req.body);
+  myData.save()
+ .then(item => {
+ res.send("Attendence information saved to database");
+ })
+ .catch(err => {
+ res.status(400).send("Unable to save to database");
+ });
+
+}
+  })
+});
 
 
-app.post("/Attendence", (req, res) => {
-  
-      var myData = new attendence(req.body);
-      myData.save()
-     .then(item => {
-     res.send("Attendence information saved to database");
-     })
-     .catch(err => {
-     res.status(400).send("Unable to save to database");
-     });
-  
-  });
- 
+ app.post("/EmployeeForm",verifyToken, (req, res) => {
 
-
- app.post("/EmployeeForm", (req, res) => {
-  
-      var myData = new employee(req.body);
+  jwt.verify(req.token,'secretkey',(err,authData)=>{
+    if(err){
+      res.sendStatus(403);
+    }else{
+       var myData = new employee(req.body);
  myData.save()
 .then(item => {
 res.send("Employee information updated to database");
 })
 .catch(err => {
 res.status(400).send("Unable to save to database");
+});
+
+    }
+  })
 
 });
 
-});
 
- 
+app.get('/salary', verifyToken, (req, res) => {
 
-
-app.get('/salary', function(req, res){
-  
+  jwt.verify(req.token,'secretkey',(err,authData)=>{
+    if(err){
+      res.sendStatus(403);
+    }else{
 
   employee.find(function(err, response){
      res.json(response);
-  
+  });
+}
+  })
 });
-});
+
+
+
+function verifyToken(req,res,next){
+  const bearerHeader=req.headers['authorization'];
+  if(typeof bearerHeader!=='undefined'){
+
+    const bearer=bearerHeader.split(' ');
+    const bearerToken=bearer[1];
+    req.token=bearerToken;
+    next();
+
+  }else{
+    res.sendStatus(403);
+  }
+}
+
+
  
 
  
